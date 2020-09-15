@@ -43,7 +43,10 @@ struct Logger :
     public rtc::LogSink
 {
     Logger() {
+#ifndef _WIN32
+        // XXX: on Win32 this uses an uninitialized mutex during load
         rtc::LogMessage::AddLogToStream(this, rtc::LS_WARNING);
+#endif
     }
 
     void OnLogMessage(const std::string &message) override {
