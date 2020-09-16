@@ -127,17 +127,26 @@ contract OrchidLottery1 {
 
     event Bound(address indexed funder);
 
-    function bind(OrchidVerifier verify) external {
+    function bind(uint256 bound, OrchidVerifier verify) external {
         Lottery storage lottery = lotteries_[msg.sender];
         require(lottery.bound_ < block.timestamp);
 
-        bytes32 codehash;
-        assembly { codehash := extcodehash(verify) }
+        if (verify == OrchidVerifier(0)) {
+            lottery.bound_ = bound;
+            delete lottery.before_;
+            delete lottery.after_;
+        } else {
+            require(block.timestamp + 1 days <= bound);
+            lottery.bound_ = bound;
 
-        lottery.bound_ = block.timestamp + 1 days;
-        lottery.before_ = lottery.after_;
-        lottery.after_.verify_ = verify;
-        lottery.after_.codehash_ = codehash;
+            lottery.before_ = lottery.after_;
+
+            bytes32 codehash;
+            assembly { codehash := extcodehash(verify) }
+            lottery.after_.verify_ = verify;
+            lottery.after_.codehash_ = codehash;
+        }
+
 
         emit Bound(msg.sender);
     }
